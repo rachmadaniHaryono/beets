@@ -91,17 +91,19 @@ def print_mb_tracks(tracks):
 def main(args=None):
     """download youtube-dl and import to beets."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--title", help="musicbrainz title query.")
-    parser.add_argument("--artist", help="musicbrainz artis query")
+    parser.add_argument("--title", help="musicbrainz title query.", default='')
+    parser.add_argument("--artist", help="musicbrainz artis query", default='')
     parser.add_argument(
         "--sort-yt", help="sort youtube tracks", action="store_true")
     parser.add_argument("--query", help="query")
     args = parser.parse_args(args)
 
     if args.title or args.artist:
-        mb_tracks = mb.match_track(args.artist, args.title)
+        mb_tracks = list(mb.match_track(args.artist, args.title))
+        print_mb_tracks(mb_tracks)
     elif args.query:
-        mb_tracks = mb.match_track('', args.title)
+        mb_tracks = list(mb.match_track('', args.title))
+        print_mb_tracks(mb_tracks)
     else:
         mb_tracks = []
 
@@ -125,6 +127,7 @@ def main(args=None):
 (q)uit/e(x)it\t\tExit program.
 download <number>\tDownload youtube.
 search-yt <query>\tRun youtube search.
+search-yt-mb <number>\tRun youtube search from musicbrainz track.
 search-mb\t\tRun musicbrainz search.
 show-yt\t\t\tShow youtube result.
 show-mb\t\t\tShow musicbrainz result."""
@@ -156,7 +159,7 @@ show-mb\t\t\tShow musicbrainz result."""
         elif keyword == 'search-mb':
             artist_input = input('artist>')
             title_input = input('title>')
-            mb_tracks = mb.match_track(artist_input, title_input)
+            mb_tracks = list(mb.match_track(artist_input, title_input))
             print_mb_tracks(mb_tracks)
         elif keyword == 'search-yt':
             input_val = user_input.split(' ', 1)[1]
