@@ -147,7 +147,10 @@ show-mb\t\t\tShow musicbrainz result."""
                         print('renaming file to ascii filename')
                         new_webm_filename = webm_filename.encode('ascii', 'replace').decode()
                         shutil.copy(webm_filename, new_webm_filename)
-                        filename = convert2mp3(new_webm_filename)
+                        new_convert_filename = convert2mp3(new_webm_filename)
+                        filename = os.path.splitext(webm_filename)[0] + '.mp3'
+                        print('moving converted file to {}'.format(filename))
+                        shutil.move(new_convert_filename, filename)
                 elif best_audio:
                     filename = best_audio.download()
                 else:
@@ -170,7 +173,7 @@ show-mb\t\t\tShow musicbrainz result."""
             if mb_tracks:
                 input_val = int(user_input.split(' ')[1])
                 track = mb_tracks[input_val-1]
-                yt_query = '{track.artist} - {track.title}'.format(track)
+                yt_query = '{track.artist} - {track.title}'.format(track=track)
                 print('Search "{}"'.format(yt_query))
                 v_parts = search_youtube(yt_query)
                 yt_vs = list(map(lambda x: pafy.new(x), v_parts))
