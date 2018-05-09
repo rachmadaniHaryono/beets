@@ -150,7 +150,7 @@ def main(args=None):
                     except UnicodeEncodeError as e:
                         print('{}: {}'.format(type(e), e))
                         new_webm_filename = webm_filename.encode('ascii', 'replace').decode()
-                        print('renaming file to ascii filename:\n{}'.format(new_webm_filename)
+                        print('renaming file to ascii filename:\n{}'.format(new_webm_filename))
                         shutil.copy(webm_filename, new_webm_filename)
                         new_convert_filename = convert2mp3(new_webm_filename)
                         filename = os.path.splitext(webm_filename)[0] + '.mp3'
