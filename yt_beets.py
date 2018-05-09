@@ -13,6 +13,7 @@ require
 - bs4
 - pafy
 - pyav
+- tqdm
 - youtube-dl
 - vcr (test)
 """
@@ -25,6 +26,7 @@ import shutil
 
 from beets.autotag import mb
 from beets.ui import main as beets_main
+from tqdm import tqdm
 import av
 import bs4
 import click
@@ -64,7 +66,7 @@ def search_youtube(query):
     return v_parts
 
 
-def print_youtube_tracks(pafy_objs, sort=True):
+def print_youtube_tracks(pafy_objs, sort=True, index=True):
     print('youtube tracks:')
     yt_vs = pafy_objs
     if sort:
@@ -72,7 +74,10 @@ def print_youtube_tracks(pafy_objs, sort=True):
     for idx, tr in enumerate(yt_vs, 1):
         m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
         kwargs = dict(idx=idx, track=tr, minute=m, second=s)
-        print('[{idx}] {track.title} ({minute}:{second})'.format(**kwargs))
+        if index:
+            print('[{idx}] {track.title} ({minute}:{second})'.format(**kwargs))
+        else:
+            print('{track.title} ({minute}:{second})'.format(**kwargs))
 
 
 def print_mb_tracks(tracks):
@@ -123,14 +128,14 @@ def main(args=None):
         elif keyword in ('help', 'h'):
             print(
                 """Help:
-(h)elp\t\t\tShow this message.
-(q)uit/e(x)it\t\tExit program.
-download <number>\tDownload youtube.
-search-yt <query>\tRun youtube search.
-search-yt-mb <number>\tRun youtube search from musicbrainz track.
-search-mb\t\tRun musicbrainz search.
-show-yt\t\t\tShow youtube result.
-show-mb\t\t\tShow musicbrainz result."""
+  (h)elp\t\t\tShow this message.
+  (q)uit/e(x)it\t\tExit program.
+  download <number>\tDownload youtube.
+  search-yt <query>\tRun youtube search.
+  search-yt-mb <number>\tRun youtube search from musicbrainz track.
+  search-mb\t\tRun musicbrainz search.
+  show-yt\t\t\tShow youtube result.
+  show-mb\t\t\tShow musicbrainz result."""
             )
         elif keyword == 'download':
             if yt_vs:
@@ -144,8 +149,8 @@ show-mb\t\t\tShow musicbrainz result."""
                         filename = convert2mp3(webm_filename)
                     except UnicodeEncodeError as e:
                         print('{}: {}'.format(type(e), e))
-                        print('renaming file to ascii filename')
                         new_webm_filename = webm_filename.encode('ascii', 'replace').decode()
+                        print('renaming file to ascii filename:\n{}'.format(new_webm_filename)
                         shutil.copy(webm_filename, new_webm_filename)
                         new_convert_filename = convert2mp3(new_webm_filename)
                         filename = os.path.splitext(webm_filename)[0] + '.mp3'
@@ -167,7 +172,11 @@ show-mb\t\t\tShow musicbrainz result."""
         elif keyword == 'search-yt':
             input_val = user_input.split(' ', 1)[1]
             v_parts = search_youtube(input_val)
-            yt_vs = list(map(lambda x: pafy.new(x), v_parts))
+            yt_vs = []
+            for v_part in tqdm(v_parts):
+                pafy_obj = pafy.new(v_part)
+                print_youtube_tracks([pafy_obj], index=False)
+                yt_vs.append(pafy_obj)
             print_youtube_tracks(yt_vs, sort=args.sort_yt)
         elif keyword == 'search-yt-mb':
             if mb_tracks:
@@ -191,7 +200,8 @@ show-mb\t\t\tShow musicbrainz result."""
             else:
                 print('No musicbrainz track found.')
         else:
-            print('Unknown keyword.')
+            if keyword != '':
+                print('Unknown keyword.')
 
 
 if __name__ == '__main__':
