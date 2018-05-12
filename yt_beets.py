@@ -15,6 +15,7 @@ require
 - pyav
 - tqdm
 - youtube-dl
+- structlog
 - vcr (test)
 """
 from __future__ import division, absolute_import, print_function
@@ -32,6 +33,10 @@ import bs4
 import click
 import pafy
 import requests
+import structlog
+
+
+log = structlog.getLogger(__name__)
 
 
 def convert2mp3(filename):
@@ -87,6 +92,7 @@ def print_mb_tracks(tracks):
         if tr.length:
             m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
         else:
+            log.debug('track length', v=tr.lengh)
             m, s = (0,0)
         kwargs = dict(idx=idx, track=tr, minute=m, second=s)
         print(
