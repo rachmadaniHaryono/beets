@@ -84,7 +84,10 @@ def print_mb_tracks(tracks):
     mb_tracks = tracks
     print('Musicbrainz tracks:')
     for idx, tr in enumerate(mb_tracks, 1):
-        m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
+        if tr.length:
+            m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
+        else:
+            m, s = (0,0)
         kwargs = dict(idx=idx, track=tr, minute=m, second=s)
         print(
             '[{idx}] {track.artist} - {track.title} ({minute}:{second})'.format(
