@@ -101,6 +101,17 @@ def print_mb_tracks(tracks):
             )
         )
 
+def get_youtube_videos(video_ids):
+    v_parts = video_ids
+    for v_part in tqdm(v_parts):
+        try:
+            pafy_obj = pafy.new(v_part)
+            print_youtube_tracks([pafy_obj], index=False)
+            yield pafy_obj
+        except Exception as e:
+            log.debug('video id', v=v_part)
+            log.debug('Error', type=type(e), err=e)
+
 
 def main(args=None):
     """download youtube-dl and import to beets."""
@@ -123,7 +134,7 @@ def main(args=None):
 
     if args.query:
         v_parts = search_youtube(args.query)
-        yt_vs = list(map(lambda x: pafy.new(x), v_parts))
+        yt_vs = get_youtube_videos(v_parts)
         print_youtube_tracks(yt_vs, sort=args.sort_yt)
     else:
         yt_vs = []
@@ -181,11 +192,7 @@ def main(args=None):
         elif keyword == 'search-yt':
             input_val = user_input.split(' ', 1)[1]
             v_parts = search_youtube(input_val)
-            yt_vs = []
-            for v_part in tqdm(v_parts):
-                pafy_obj = pafy.new(v_part)
-                print_youtube_tracks([pafy_obj], index=False)
-                yt_vs.append(pafy_obj)
+            yt_vs = get_youtube_videos(v_parts)
             print_youtube_tracks(yt_vs, sort=args.sort_yt)
         elif keyword == 'search-yt-mb':
             if mb_tracks:
@@ -194,7 +201,7 @@ def main(args=None):
                 yt_query = '{track.artist} - {track.title}'.format(track=track)
                 print('Search "{}"'.format(yt_query))
                 v_parts = search_youtube(yt_query)
-                yt_vs = list(map(lambda x: pafy.new(x), v_parts))
+                yt_vs = get_youtube_videos(v_parts)
                 print_youtube_tracks(yt_vs, sort=args.sort_yt)
             else:
                 print('No musicbrainz track found.')
