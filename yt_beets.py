@@ -129,11 +129,11 @@ def main(args=None):
             print(
                 """Help:
   (h)elp\t\t\tShow this message.
-  (q)uit/e(x)it\t\tExit program.
-  download <number>\tDownload youtube.
-  search-yt <query>\tRun youtube search.
-  search-yt-mb <number>\tRun youtube search from musicbrainz track.
-  search-mb\t\tRun musicbrainz search.
+  (q)uit/e(x)it\t\t\tExit program.
+  download <number>\t\tDownload youtube.
+  search-yt <query>\t\tRun youtube search.
+  search-yt-mb <number>\t\tRun youtube search from musicbrainz track.
+  search-mb\t\t\tRun musicbrainz search.
   show-yt\t\t\tShow youtube result.
   show-mb\t\t\tShow musicbrainz result."""
             )
