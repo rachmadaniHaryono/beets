@@ -71,18 +71,22 @@ def search_youtube(query):
     return v_parts
 
 
-def print_youtube_tracks(pafy_objs, sort=True, index=True):
+def get_youtube_tracks_print_text(pafy_obj, index=None):
+    tr = pafy_obj
+    m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
+    kwargs = dict(idx=index, track=tr, minute=m, second=s)
+    if index:
+        return '[{idx}] {track.title} ({minute}:{second})'.format(**kwargs)
+    else:
+        return '{track.title} ({minute}:{second})'.format(**kwargs)
+
+
+def print_youtube_tracks(pafy_objs):
     print('youtube tracks:')
     yt_vs = pafy_objs
-    if sort:
-        yt_vs.sort(key=lambda x: x.title)
+    yt_vs.sort(key=lambda x: x.title)
     for idx, tr in enumerate(yt_vs, 1):
-        m, s = list(map(lambda x: int(x), divmod(tr.length, 60)))
-        kwargs = dict(idx=idx, track=tr, minute=m, second=s)
-        if index:
-            print('[{idx}] {track.title} ({minute}:{second})'.format(**kwargs))
-        else:
-            print('{track.title} ({minute}:{second})'.format(**kwargs))
+        print(get_youtube_tracks_print_text(tr, index=idx))
 
 
 def print_mb_tracks(tracks):
@@ -101,15 +105,17 @@ def print_mb_tracks(tracks):
             )
         )
 
-def get_youtube_videos(video_ids):
+def get_youtube_videos(video_ids, print_index=False):
     v_parts = video_ids
     for v_part in tqdm(v_parts):
         try:
             pafy_obj = pafy.new(v_part)
-            print_youtube_tracks([pafy_obj], index=False)
+            tqdm.write(get_youtube_tracks_print_text(pafy_obj))
             yield pafy_obj
         except Exception as e:
-            log.debug('video id', v=v_part)
+            log.debug(
+                'video id', v=v_part,
+                url='https://www.youtube.com/watch?v={}'.format(v_part))
             log.debug('Error', type=type(e), err=e)
 
 
@@ -118,8 +124,6 @@ def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--title", help="musicbrainz title query.", default='')
     parser.add_argument("--artist", help="musicbrainz artis query", default='')
-    parser.add_argument(
-        "--sort-yt", help="sort youtube tracks", action="store_true")
     parser.add_argument("--query", help="query")
     args = parser.parse_args(args)
 
@@ -134,8 +138,8 @@ def main(args=None):
 
     if args.query:
         v_parts = search_youtube(args.query)
-        yt_vs = get_youtube_videos(v_parts)
-        print_youtube_tracks(yt_vs, sort=args.sort_yt)
+        yt_vs = list(get_youtube_videos(v_parts))
+        print_youtube_tracks(yt_vs)
     else:
         yt_vs = []
 
@@ -192,8 +196,8 @@ def main(args=None):
         elif keyword == 'search-yt':
             input_val = user_input.split(' ', 1)[1]
             v_parts = search_youtube(input_val)
-            yt_vs = get_youtube_videos(v_parts)
-            print_youtube_tracks(yt_vs, sort=args.sort_yt)
+            yt_vs = list(get_youtube_videos(v_parts))
+            print_youtube_tracks(yt_vs)
         elif keyword == 'search-yt-mb':
             if mb_tracks:
                 input_val = int(user_input.split(' ')[1])
@@ -201,13 +205,13 @@ def main(args=None):
                 yt_query = '{track.artist} - {track.title}'.format(track=track)
                 print('Search "{}"'.format(yt_query))
                 v_parts = search_youtube(yt_query)
-                yt_vs = get_youtube_videos(v_parts)
-                print_youtube_tracks(yt_vs, sort=args.sort_yt)
+                yt_vs = list(get_youtube_videos(v_parts))
+                print_youtube_tracks(yt_vs)
             else:
                 print('No musicbrainz track found.')
         elif keyword == 'show-yt':
             if yt_vs:
-                print_youtube_tracks(yt_vs, sort=args.sort_yt)
+                print_youtube_tracks(yt_vs)
             else:
                 print('No youtube videos found.')
         elif keyword == 'show-mb':
