@@ -158,7 +158,10 @@ def main(args=None):
     exit_flag = False
     while not exit_flag:
         user_input = input('input>')
-        args = parser.parse_args(shlex.split(user_input))
+        try:
+            args = parser.parse_args(shlex.split(user_input))
+        except SystemExit:
+            args.subcommand = None
         if args.subcommand in ('quit', 'exit', 'q', 'x'):
             exit_flag = True
         elif args.subcommand in ('help', 'h'):
