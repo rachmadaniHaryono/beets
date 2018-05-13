@@ -162,11 +162,13 @@ def main(args=None):
         if args.subcommand in ('quit', 'exit', 'q', 'x'):
             exit_flag = True
         elif args.subcommand in ('help', 'h'):
-            args.print_help()
+            parser.print_help()
         elif args.subcommand in ('download', 'd'):
             if yt_vs:
                 input_val = int(input('index>'))
                 sel_yt_v = yt_vs[input_val-1]
+                sel_yt_v_text = get_youtube_tracks_print_text([sel_yt_vs])
+                print('selected: {}'.format(sel_yt_v_text))
                 best_audio = sel_yt_v.getbestaudio()
                 import_flag = True
                 if best_audio and best_audio.extension == 'webm':
@@ -191,7 +193,7 @@ def main(args=None):
             else:
                 print('No youtube videos found.')
         elif args.subcommand == 'search':
-            args.input = args.input if len(args.input) > 1 else args.input = [None]
+            args.input = args.input if len(args.input) > 1 else [None]
             if args.input[0] == 'yt-mb':
                 if mb_tracks:
                     input_val = int(user_input.split(' ')[1])
@@ -215,13 +217,16 @@ def main(args=None):
                     mb_tracks = list(mb.match_track(artist_input, title_input))
                     print_mb_tracks(mb_tracks)
         elif args.subcommand == 'show':
-            args.input = args.input if len(args.input) > 1 else args.input = [None]
+            args.input = args.input if len(args.input) > 1 else [None]
             input0 = args.input[0]
             print_yt = False
             print_mb = False
             if input0 == 'yt':
                 print_yt = True
-            elif input0 = 'mb':
+            elif input0 == 'mb':
+                print_mb = True
+            else:
+                print_yt = True
                 print_mb = True
             if print_yt and yt_vs:
                 print_youtube_tracks(yt_vs)
@@ -229,7 +234,7 @@ def main(args=None):
                 print('No youtube videos found.')
             if print_mb and mb_tracks:
                 print_mb_tracks(mb_tracks)
-            else:
+            elif print_mb and not mb_tracks:
                 print('No musicbrainz track found.')
         else:
             if user_input.strip() != '':
