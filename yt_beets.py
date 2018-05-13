@@ -23,6 +23,7 @@ from __future__ import division, absolute_import, print_function
 from urllib.parse import quote_plus, urlparse, parse_qs
 import argparse
 import os
+import shlex
 import shutil
 
 from beets.autotag import mb
@@ -143,27 +144,28 @@ def main(args=None):
     else:
         yt_vs = []
 
+    parser = argparse.ArgumentParser()
+    subparser = parser.add_subparsers(dest='subcommand')
+    subparser.add_parser('quit', aliases=['q', 'exit', 'x'], help='exit program.')
+    parser_download = subparser.add_parser('download', aliases=['d'], help='download')
+    parser_download.add_argument('input', nargs='*')
+    parser_search = subparser.add_parser('search', help='run search')
+    parser_search.add_argument('input', nargs='*')
+    parser_show = subparser.add_parser('show', help='show search result')
+    parser_show.add_argument('input', nargs='*')
+    subparser.add_parser('help', aliases=['h'], help='show this help message')
+
     exit_flag = False
     while not exit_flag:
         user_input = input('input>')
-        keyword = user_input.split(' ')[0]
-        if keyword in ('quit', 'exit', 'q', 'x'):
+        args = parser.parse_args(shlex.split(user_input))
+        if args.subcommand in ('quit', 'exit', 'q', 'x'):
             exit_flag = True
-        elif keyword in ('help', 'h'):
-            print(
-                """Help:
-  (h)elp\t\t\tShow this message.
-  (q)uit/e(x)it\t\t\tExit program.
-  download <number>\t\tDownload youtube.
-  search-yt <query>\t\tRun youtube search.
-  search-yt-mb <number>\t\tRun youtube search from musicbrainz track.
-  search-mb\t\t\tRun musicbrainz search.
-  show-yt\t\t\tShow youtube result.
-  show-mb\t\t\tShow musicbrainz result."""
-            )
-        elif keyword == 'download':
+        elif args.subcommand in ('help', 'h'):
+            args.print_help()
+        elif args.subcommand in ('download', 'd'):
             if yt_vs:
-                input_val = int(user_input.split(' ')[1])
+                input_val = int(input('index>'))
                 sel_yt_v = yt_vs[input_val-1]
                 best_audio = sel_yt_v.getbestaudio()
                 import_flag = True
@@ -188,40 +190,50 @@ def main(args=None):
                     beets_main(['import', '-s', filename])
             else:
                 print('No youtube videos found.')
-        elif keyword == 'search-mb':
-            artist_input = input('artist>')
-            title_input = input('title>')
-            mb_tracks = list(mb.match_track(artist_input, title_input))
-            print_mb_tracks(mb_tracks)
-        elif keyword == 'search-yt':
-            input_val = user_input.split(' ', 1)[1]
-            v_parts = search_youtube(input_val)
-            yt_vs = list(get_youtube_videos(v_parts))
-            print_youtube_tracks(yt_vs)
-        elif keyword == 'search-yt-mb':
-            if mb_tracks:
-                input_val = int(user_input.split(' ')[1])
-                track = mb_tracks[input_val-1]
-                yt_query = '{track.artist} - {track.title}'.format(track=track)
-                print('Search "{}"'.format(yt_query))
-                v_parts = search_youtube(yt_query)
-                yt_vs = list(get_youtube_videos(v_parts))
-                print_youtube_tracks(yt_vs)
+        elif args.subcommand == 'search':
+            args.input = args.input if len(args.input) > 1 else args.input = [None]
+            if args.input[0] == 'yt-mb':
+                if mb_tracks:
+                    input_val = int(user_input.split(' ')[1])
+                    track = mb_tracks[input_val-1]
+                    yt_query = '{track.artist} - {track.title}'.format(track=track)
+                    print('Search "{}"'.format(yt_query))
+                    v_parts = search_youtube(yt_query)
+                    yt_vs = list(get_youtube_videos(v_parts))
+                    print_youtube_tracks(yt_vs)
+                else:
+                    print('No musicbrainz track found.')
             else:
-                print('No musicbrainz track found.')
-        elif keyword == 'show-yt':
-            if yt_vs:
+                youtube_query = input('youtube query>')
+                if youtube_query:
+                    v_parts = search_youtube(youtube_query)
+                    yt_vs = list(get_youtube_videos(v_parts))
+                    print_youtube_tracks(yt_vs)
+                artist_input = input('artist>')
+                title_input = input('title>')
+                if any([artist_input, title_input]):
+                    mb_tracks = list(mb.match_track(artist_input, title_input))
+                    print_mb_tracks(mb_tracks)
+        elif args.subcommand == 'show':
+            args.input = args.input if len(args.input) > 1 else args.input = [None]
+            input0 = args.input[0]
+            print_yt = False
+            print_mb = False
+            if input0 == 'yt':
+                print_yt = True
+            elif input0 = 'mb':
+                print_mb = True
+            if print_yt and yt_vs:
                 print_youtube_tracks(yt_vs)
-            else:
+            elif print_yt and not yt_vs:
                 print('No youtube videos found.')
-        elif keyword == 'show-mb':
-            if mb_tracks:
+            if print_mb and mb_tracks:
                 print_mb_tracks(mb_tracks)
             else:
                 print('No musicbrainz track found.')
         else:
-            if keyword != '':
-                print('Unknown keyword.')
+            if user_input.strip() != '':
+                print('Unknown command [{}].'.format(user_input))
 
 
 if __name__ == '__main__':
