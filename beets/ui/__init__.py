@@ -712,9 +712,16 @@ def show_model_changes(new, old=None, fields=None, always=False):
         if field == 'mtime' or (fields and field not in fields):
             continue
 
+        if field == 'bpm' and int(old.bpm) == int(new.bpm):
+            continue
+
         # Detect and show difference for this field.
         line = _field_diff(field, old, new)
         if line:
+            if field == 'acoustid_fingerprint' and \
+                    isinstance(new.acoustid_fingerprint, bytes) and  \
+                    str(new.acoustid_fingerprint, 'utf8') == old.acoustid_fingerprint:
+                continue
             changes.append(u'  {0}: {1}'.format(field, line))
 
     # New fields.
