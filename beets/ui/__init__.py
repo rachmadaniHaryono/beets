@@ -712,7 +712,10 @@ def show_model_changes(new, old=None, fields=None, always=False):
         if field == 'mtime' or (fields and field not in fields):
             continue
 
-        if field == 'bpm' and int(old.bpm) == int(new.bpm):
+        if field == 'bpm' and (
+                (int(old.bpm) == int(new.bpm)) or
+                (0 < (old.bpm - new.bpm) < 0.99)
+        ):
             continue
 
         # Detect and show difference for this field.
