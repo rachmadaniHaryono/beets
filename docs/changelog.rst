@@ -11,8 +11,20 @@ been dropped.
 
 New features:
 
+* :doc:`plugins/lastgenre`: The new configuration option, ``keep_existing``,
+  provides more fine-grained control over how pre-populated genre tags are
+  handled. The ``force`` option now behaves in a more conventional manner.
+  :bug:`4982`
+* :doc:`plugins/lyrics`: Add new configuration option ``dist_thresh`` to
+  control the maximum allowed distance between the lyrics search result and the
+  tagged item's artist and title. This is useful for preventing false positives
+  when fetching lyrics.
+
 Bug fixes:
 
+* :doc:`plugins/fetchart`: Fix fetchart bug where a tempfile could not be deleted due to never being
+  properly closed.
+  :bug:`5521`
 * :doc:`plugins/lyrics`: LRCLib will fallback to plain lyrics if synced lyrics
   are not found and `synced` flag is set to `yes`.
 * Synchronise files included in the source distribution with what we used to
@@ -55,10 +67,18 @@ Bug fixes:
   ``lrclib`` over other sources since it returns reliable results quicker than
   others.
   :bug:`5102`
+* :doc:`plugins/lyrics`: Fix the issue with ``genius`` backend not being able
+  to match lyrics when there is a slight variation in the artist name.
+  :bug:`4791`
+* :doc:`plugins/lyrics`: Fix plugin crash when ``genius`` backend returns empty
+  lyrics.
+  :bug:`5583`
 
 For packagers:
 
 * The minimum supported Python version is now 3.9.
+* External plugin developers: ``beetsplug/__init__.py`` file can be removed
+  from your plugin as beets now uses native/implicit namespace package setup.
 
 Other changes:
 
@@ -66,6 +86,10 @@ Other changes:
   wrong (outdated) commit. Now the tag is created in the same workflow step
   right after committing the version update.
   :bug:`5539`
+* Added some typehints: ImportSession and Pipeline have typehints now. Should
+  improve useability for new developers.
+* :doc:`/plugins/smartplaylist`: URL-encode additional item `fields` within generated
+  EXTM3U playlists instead of JSON-encoding them.
 
 2.2.0 (December 02, 2024)
 -------------------------
